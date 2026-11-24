@@ -1,0 +1,19 @@
+# Local Python environment
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Databricks extension / bundle state (machine-specific)
+.databricks/
+
+# Local environment variables (profile name)
+.env
+
+# Machine-specific bundle settings (workspace host), written by setup.sh
+databricks.local*.yml
+
+# Editor / OS
+.DS_Store
+*.swp

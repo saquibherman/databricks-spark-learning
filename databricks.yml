@@ -1,0 +1,16 @@
+bundle:
+  name: introduction-to-apache-spark-course
+
+# Machine-specific settings (workspace host), git-ignored. The VS Code Databricks extension
+# needs workspace.host and fails with "Invalid host name" without it.
+include:
+  - databricks.local*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # Profile in ~/.databrickscfg (created by setup.sh with `databricks auth login`). The workspace
+      # host lives in the git-ignored databricks.local.yml, written by setup.sh.
+      profile: azure-de
