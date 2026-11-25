@@ -60,7 +60,8 @@ echo "Wrote databricks.local.yml (workspace host for the bundle and VS Code exte
 # ---------------------------------------------------------------- 3. local venv
 say "Local Python environment (.venv, Python 3.12 = DBR 17.3 / serverless env v4)"
 [ -d .venv ] || uv venv .venv --python 3.12
-uv pip install --python .venv -q pip nbformat ipykernel databricks-connect databricks-sdk pandas
+# databricks-connect must match the cluster's DBR (17.3); this client also works on serverless.
+uv pip install --python .venv -q pip nbformat ipykernel "databricks-connect==17.3.*" databricks-sdk pandas
 echo "Installed: $(.venv/bin/python -c 'from importlib.metadata import version as v;print("databricks-connect",v("databricks-connect"))')"
 
 # ---------------------------------------------------------------- 4. Unity Catalog bootstrap
@@ -134,11 +135,17 @@ print(json.dumps({"cluster_name":n,"spark_version":v,"node_type_id":t,"num_worke
 else
   echo "  [ok]      $CLUSTER_NAME ($CLUSTER_ID)"
 fi
+# Let the VS Code extension (and Run File as Workflow) use this cluster by default.
+if [ -n "$CLUSTER_ID" ]; then
+  printf '    cluster_id: %s\n' "$CLUSTER_ID" >> databricks.local.yml
+  echo "  [ok]      cluster_id added to databricks.local.yml"
+fi
 
 # ---------------------------------------------------------------- 6. .env
 say "Local run configuration"
-sed -e "s#^DATABRICKS_CONFIG_PROFILE=.*#DATABRICKS_CONFIG_PROFILE=$PROFILE#" .env.example > .env
-echo "Wrote .env (profile $PROFILE)"
+sed -e "s#^DATABRICKS_CONFIG_PROFILE=.*#DATABRICKS_CONFIG_PROFILE=$PROFILE#" \
+    -e "s#^DATABRICKS_CLUSTER_ID=.*#DATABRICKS_CLUSTER_ID=$CLUSTER_ID#" .env.example > .env
+echo "Wrote .env (profile $PROFILE, cluster $CLUSTER_ID)"
 
 # ---------------------------------------------------------------- 7. sync
 say "Syncing course to the workspace"

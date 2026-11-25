@@ -37,11 +37,12 @@ cd Introduction_to_Apache_Spark
 1. installs the Databricks CLI and `uv` into `~/.local/bin` if missing (no sudo);
 2. logs in to your workspace (OAuth, profile `azure-de`), asking for the workspace URL once, and writes
    it to the git-ignored `databricks.local.yml` (the VS Code extension needs it in the bundle);
-3. creates `.venv` (Python 3.12) with Databricks Connect;
+3. creates `.venv` (Python 3.12) with Databricks Connect 17.3 (must match the cluster's DBR; also works on serverless);
 4. creates your course catalog `labuser_<you>`, checks `samples`, and writes `<default catalog>.ops.meta_spark`;
 5. creates the classic cluster **Intro to Apache Spark (&lt;you&gt;)** (DBR 17.3 LTS, dedicated, 1 worker,
-   `Standard_D4ds_v5`, auto-terminates after 30 min) and terminates it right away;
-6. writes `.env` for local runs;
+   `Standard_D4ds_v5`, auto-terminates after 30 min), terminates it right away, and adds its ID to
+   `databricks.local.yml` so the VS Code extension uses it;
+6. writes `.env` for local runs, pointing Databricks Connect at that cluster;
 7. syncs the course to `/Workspace/Users/<you>/.bundle/introduction-to-apache-spark-course/dev/files`.
 
 **Run the course**
@@ -71,7 +72,7 @@ shows the driver.
 | `setup.sh` end to end | ✅ |
 | `01_Demo_Required_Setup` → `Version_Info` (serverless job run) | ✅ |
 | `2.3` and `4.2` demos (serverless job run) | ✅ |
-| `1.3` demo on the classic cluster (Spark UI, `sc`) | not yet tested |
+| `1.3` demo on the classic cluster: job run in Databricks, and its code locally over Databricks Connect 17.3 | ✅ |
 
 ---
 
@@ -105,6 +106,7 @@ shows the driver.
 |---|---|---|
 | Course folder flattened into the repo root, top-level `Includes/` merged in, names with spaces/colons/` - ` → underscores, all `%run` and `$./` links updated | all | Same conventions as the other course repos; paths with spaces are awkward in shells and links |
 | `.sql`/`.py` source notebooks → `.ipynb` (workspace exporter) | lessons, `Version_Info` | Same as the other repos. `Includes/*` stay source files (`%run` targets) |
+| 1.3 demo: SQL-language notebook → Python (its `%python` prefixes removed) | 1.3 | All its code cells were `%python`; as a SQL notebook VS Code can't run them with the Python kernel |
 | Serverless environment v4 in notebook metadata | all `.ipynb` (`scripts/set_serverless_env.py`) | Matches DBR 17.3 / Spark 4.0 when a notebook runs on serverless |
 | `"0 - Required Setup"` → `01_Demo_Required_Setup` in text and `ensure_setup()` errors | `Includes/Classroom-Setup-Common.sql`, 00, 01, 2.3, 4.2 | Points at the notebook's actual name |
 | JavaScript in `%md-sandbox` cells → static HTML: Prism code blocks pre-highlighted (`scripts/static_code_blocks.py`); multiple-choice and true/false knowledge checks, flip cards and Spark UI tabs rewritten with *Show answer* / *Click for more* folds (`scripts/static_widgets.py`) | lectures, labs, 1.3 demo | VS Code doesn't run scripts in markdown, so code collapsed into plain text and quizzes rendered empty; now they look the same in VS Code and Databricks (no score counter, light/dark toggle or Copy button) |
@@ -122,7 +124,7 @@ shows the driver.
 |---|:-:|:-:|:-:|
 | Python/PySpark cells in 2.3, 4.2, 4.3 | ✅ (after `%run` setup in the workspace) | ✅ | ✅ |
 | `01_Demo_Required_Setup`, SQL cells, `%run` Classroom-Setup | ❌ (SQL-language notebooks, `%run`) | ✅ | ✅ |
-| 1.3 demo: `sc`, Spark UI | ❌ | partly (no `sc`, no Spark UI) | ✅ |
+| 1.3 demo | ✅ on the cluster (Spark UI in **Compute → cluster → Spark UI**; `sc` is never available over Databricks Connect, the demo handles that) | ❌ (`spark.app.id`, `cache()` fail) | ✅ |
 
 Rule of thumb: **edit locally, run the lessons in the workspace** (from the synced bundle folder).
 
@@ -136,6 +138,8 @@ Rule of thumb: **edit locally, run the lessons in the workspace** (from the sync
 | `UC_METASTORE_STORAGE_ROOT_URL_NOT_FOUND_WITH_DEFAULT_STORAGE` in Classroom Setup | `labuser_<you>` doesn't exist yet, so the notebook tried a plain `CREATE CATALOG` | Run `./setup.sh` (creates it with a managed location) |
 | `Metadata table <catalog>.ops.meta_spark not found` (Version_Info) | Workspace not bootstrapped | Run `./setup.sh` |
 | `sc` is not defined / no Spark UI link | Notebook is on serverless or a standard-access cluster | Attach the dedicated **Intro to Apache Spark** cluster |
+| Local run: `CONFIG_NOT_AVAILABLE` for `spark.app.id`, or `cache()` fails | Running on serverless | Use the cluster: `DATABRICKS_CLUSTER_ID` in `.env` (setup.sh writes it) and the cluster selected in the Databricks extension; restart the kernel |
+| Local run on the cluster: version or protocol mismatch error | `databricks-connect` newer than DBR 17.3 | `uv pip install --python .venv "databricks-connect==17.3.*"` (setup.sh pins it) |
 | Cluster creation failed in `setup.sh` | No cluster-create permission, or node type unavailable | Create one in **Compute**: Dedicated access, 17.3 LTS, then re-run (it is detected by name) |
 | VS Code: Databricks sidebar never logs in; `UrlError: Invalid host name` | No `workspace.host` in the bundle | Run `./setup.sh`, then **Developer: Reload Window** |
 | Local run: `default auth: metadata-service ... Connection refused` | The extension's auth helper moved to a new port | `DATABRICKS_AUTH_TYPE=databricks-cli` in `.env` (setup.sh writes it); restart the kernel |
