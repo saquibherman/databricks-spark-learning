@@ -86,7 +86,8 @@ shows the driver.
 ├── .vscode/settings.json # .venv interpreter, notebook working dir, Databricks cell markers
 ├── scripts/
 │   ├── set_serverless_env.py   # Pin notebooks to a serverless environment version
-│   └── static_code_blocks.py   # Pre-render JS code blocks so they show in VS Code
+│   ├── static_code_blocks.py   # Pre-render JS code blocks so they show in VS Code
+│   └── static_widgets.py       # Quizzes, flip cards, tabs as static HTML for VS Code
 ├── NOTES.md, Version_Info.ipynb
 ├── 00_Course_Overview.ipynb, 01_Demo_Required_Setup.ipynb
 ├── 1_Apache_Spark_Runtime_Architecture/     # Section_Overview + 1.1 … 1.3
@@ -106,7 +107,7 @@ shows the driver.
 | `.sql`/`.py` source notebooks → `.ipynb` (workspace exporter) | lessons, `Version_Info` | Same as the other repos. `Includes/*` stay source files (`%run` targets) |
 | Serverless environment v4 in notebook metadata | all `.ipynb` (`scripts/set_serverless_env.py`) | Matches DBR 17.3 / Spark 4.0 when a notebook runs on serverless |
 | `"0 - Required Setup"` → `01_Demo_Required_Setup` in text and `ensure_setup()` errors | `Includes/Classroom-Setup-Common.sql`, 00, 01, 2.3, 4.2 | Points at the notebook's actual name |
-| Prism (JavaScript) code blocks in `%md-sandbox` cells → static, pre-highlighted HTML (`scripts/static_code_blocks.py`) | lectures, lab solutions | VS Code doesn't run scripts in markdown, so the code collapsed into plain text; now it renders the same in VS Code and Databricks (the light/dark toggle and Copy button are gone) |
+| JavaScript in `%md-sandbox` cells → static HTML: Prism code blocks pre-highlighted (`scripts/static_code_blocks.py`); multiple-choice and true/false knowledge checks, flip cards and Spark UI tabs rewritten with *Show answer* / *Click for more* folds (`scripts/static_widgets.py`) | lectures, labs, 1.3 demo | VS Code doesn't run scripts in markdown, so code collapsed into plain text and quizzes rendered empty; now they look the same in VS Code and Databricks (no score counter, light/dark toggle or Copy button) |
 | `restartPython()` only on Databricks | `Includes/_common.py` | `dbutils.library` does not exist over Databricks Connect |
 | `DBAcademyHelper` reads `<default catalog>.ops.meta_spark` (was `ops.meta` under `dbacademy`) | `Includes/_common.py`, created by `setup.sh` | `dbacademy` only exists in Academy labs; own table so the other repos' `ops.meta*` aren't overwritten |
 | `labuser_<you>` created by `setup.sh` with a `MANAGED LOCATION` | `setup.sh` | The metastore has no storage root, so `Classroom-Setup-Common`'s plain `CREATE CATALOG` would fail; it now finds the catalog existing |

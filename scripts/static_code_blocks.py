@@ -44,9 +44,13 @@ PRISM_RUNNER = re.compile(r"<script>\s*\(function\(\) \{\s*document\.querySelect
 
 
 def render(match: re.Match) -> str:
-    kind, lang, code = match.group(1), match.group(2), html.unescape(match.group(3)).strip("\n")
+    kind, lang, raw = match.group(1), match.group(2), match.group(3)
+    # Prism used the block's textContent: tags dropped (the course writes empty lines as <br/>), entities decoded
+    code = html.unescape(re.sub(r"</?[a-zA-Z][^>]*>", "", raw)).strip("\n")
     fmt = HtmlFormatter(nowrap=True, noclasses=True, style=PrismTomorrow)
     body = highlight(code, get_lexer_by_name(lang), fmt).rstrip("\n")
+    # A blank line would end the surrounding Markdown HTML block, so keep empty lines non-blank
+    body = "\n".join(line if line.strip() else "<span></span>" for line in body.split("\n"))
     return f'<pre style="{BACKGROUND[kind]}{PRE_BASE}"><code>{body}</code></pre>'
 
 
