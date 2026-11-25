@@ -42,7 +42,8 @@ cd Introduction_to_Apache_Spark
 5. creates the classic cluster **Intro to Apache Spark (&lt;you&gt;)** (DBR 17.3 LTS, dedicated, 1 worker,
    `Standard_D4ds_v5`, auto-terminates after 30 min), terminates it right away, and adds its ID to
    `databricks.local.yml` so the VS Code extension uses it;
-6. writes `.env` for local runs, pointing Databricks Connect at that cluster;
+6. writes `.env` for local runs, pointing Databricks Connect at that cluster, and `.databricks/.databricks.env`
+   so local notebook kernels get `spark`, `dbutils` and `display`;
 7. syncs the course to `/Workspace/Users/<you>/.bundle/introduction-to-apache-spark-course/dev/files`.
 
 **Run the course**
@@ -139,6 +140,7 @@ Rule of thumb: **edit locally, run the lessons in the workspace** (from the sync
 | `Metadata table <catalog>.ops.meta_spark not found` (Version_Info) | Workspace not bootstrapped | Run `./setup.sh` |
 | `sc` is not defined / no Spark UI link | Notebook is on serverless or a standard-access cluster | Attach the dedicated **Intro to Apache Spark** cluster |
 | Local run: `CONFIG_NOT_AVAILABLE` for `spark.app.id`, or `cache()` fails | Running on serverless | Use the cluster: `DATABRICKS_CLUSTER_ID` in `.env` (setup.sh writes it) and the cluster selected in the Databricks extension; restart the kernel |
+| Local notebook: `NameError: name 'spark' is not defined` | No `.databricks/.databricks.env`, so the Databricks extension's IPython startup script skips creating `spark` | Run `./setup.sh` (writes it), or connect the Databricks extension; then restart the kernel. Needs the extension installed (it provides the startup script) |
 | Local run on the cluster: version or protocol mismatch error | `databricks-connect` newer than DBR 17.3 | `uv pip install --python .venv "databricks-connect==17.3.*"` (setup.sh pins it) |
 | Cluster creation failed in `setup.sh` | No cluster-create permission, or node type unavailable | Create one in **Compute**: Dedicated access, 17.3 LTS, then re-run (it is detected by name) |
 | VS Code: Databricks sidebar never logs in; `UrlError: Invalid host name` | No `workspace.host` in the bundle | Run `./setup.sh`, then **Developer: Reload Window** |

@@ -146,6 +146,13 @@ say "Local run configuration"
 sed -e "s#^DATABRICKS_CONFIG_PROFILE=.*#DATABRICKS_CONFIG_PROFILE=$PROFILE#" \
     -e "s#^DATABRICKS_CLUSTER_ID=.*#DATABRICKS_CLUSTER_ID=$CLUSTER_ID#" .env.example > .env
 echo "Wrote .env (profile $PROFILE, cluster $CLUSTER_ID)"
+# The Databricks extension's IPython startup script (~/.ipython/profile_default/startup/00-databricks-init-*.py)
+# creates spark, dbutils, display and %sql in local kernels, but only when .databricks/.databricks.env exists.
+# The extension writes it once connected; write it here too, so notebooks get `spark` right away.
+mkdir -p .databricks
+{ echo "DATABRICKS_PROJECT_ROOT=$PWD"; echo "DATABRICKS_CONFIG_PROFILE=$PROFILE"
+  echo "DATABRICKS_AUTH_TYPE=databricks-cli"; [ -n "$CLUSTER_ID" ] && echo "DATABRICKS_CLUSTER_ID=$CLUSTER_ID"; } > .databricks/.databricks.env
+echo "Wrote .databricks/.databricks.env (spark/dbutils in local notebook kernels)"
 
 # ---------------------------------------------------------------- 7. sync
 say "Syncing course to the workspace"
